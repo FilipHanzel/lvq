@@ -1,4 +1,4 @@
-from random import randint
+from random import seed, shuffle
 from typing import List, Union
 
 
@@ -51,3 +51,44 @@ class LVQ:
                     else:
                         b_vector[idx] -= learning_rate * error
             print(f"> epoch {epoch:>5}, error {round(sse,3):>5}")
+
+
+def cross_validate(
+    dataset: List[List[float]],
+    fold_count: int,
+    *,
+    codebook_size: int,
+    features_count: int,
+    labels_count: int,
+    learning_rate: float,
+    epochs: int,
+) -> List[float]:
+
+    dataset_copy = dataset.copy()
+
+    seed(0)
+    shuffle(dataset_copy)
+
+    fold_size = len(dataset) // fold_count
+    folds = [
+        dataset_copy[idx : idx + fold_size] for idx in range(0, len(dataset), fold_size)
+    ]
+
+    scores = []
+    for test_vectors in folds:
+        train_vectors = folds.copy()
+        train_vectors.remove(test_vectors)
+        train_vectors = [item for fold in train_vectors for item in fold]
+
+        model = LVQ(codebook_size, features_count, labels_count)
+        model.train_codebook(train_vectors, learning_rate, epochs)
+
+        correct = 0
+        for vector in test_vectors:
+            *features, label = vector
+            prediction = model.predict(features)
+            if prediction == label:
+                correct += 1
+        scores.append(correct / len(test_vectors))
+
+    return scores
