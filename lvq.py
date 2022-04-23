@@ -146,7 +146,6 @@ def cross_validate(
 
     dataset_copy = dataset.copy()
 
-    seed(0)
     shuffle(dataset_copy)
 
     fold_size = len(dataset) // fold_count

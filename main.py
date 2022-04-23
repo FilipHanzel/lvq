@@ -1,5 +1,5 @@
 import csv
-from random import choice
+from random import choice, seed
 
 import lvq
 from data import normalize
@@ -9,6 +9,8 @@ if __name__ == "__main__":
     with open("iris-data.csv", "rt") as f:
         dataset = [[float(value) for value in line] for line in csv.reader(f) if line]
     dataset = normalize(dataset)
+
+    seed(0)
 
     model_config = dict(
         codebook_size=6,
