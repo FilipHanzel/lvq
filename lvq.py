@@ -67,8 +67,8 @@ class LVQ:
         idx = 1
         while len(self.codebook) < self.codebook_size:
             if len(label_split[idx]) > 0:
-                self.codebook.append(label_split[idx].pop())
-            idx = (idx + 1) % self.labels_count + 1
+                self.codebook.append(label_split[idx].pop().copy())
+            idx = idx % self.labels_count + 1
 
     def _init_codebook_random(self) -> None:
         """Initialize the codebook with random values bewteen 0 and 1.
