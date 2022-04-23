@@ -14,7 +14,11 @@ if __name__ == "__main__":
     codebook = 10
 
     model = lvq.LVQ(
-        codebook_size=codebook, features_count=features, labels_count=labels
+        codebook_size=codebook,
+        features_count=features,
+        labels_count=labels,
+        codebook_init_method="sample",
+        codebook_init_dataset=dataset,
     )
 
     print("Sample:", dataset[0])
@@ -37,6 +41,8 @@ if __name__ == "__main__":
         codebook_size=codebook,
         features_count=features,
         labels_count=labels,
+        codebook_init_method="sample",
+        codebook_init_dataset=dataset,
         learning_rate=0.01,
         epochs=100,
     )
