@@ -2,10 +2,12 @@ import csv
 from pprint import pprint
 
 import lvq
+from data import normalize
 
 if __name__ == "__main__":
     with open("iris-data.csv", "rt") as f:
-        data = [[float(value) for value in line] for line in csv.reader(f) if line]
+        dataset = [[float(value) for value in line] for line in csv.reader(f) if line]
+    dataset = normalize(dataset)
 
     features = 4
     labels = 3
@@ -15,22 +17,22 @@ if __name__ == "__main__":
         codebook_size=codebook, features_count=features, labels_count=labels
     )
 
-    print("Sample:", data[0])
-    print("Prediction:", model.predict(data[0]))
+    print("Sample:", dataset[0])
+    print("Prediction:", model.predict(dataset[0]))
 
     print("New codebook:")
     pprint(model.codebook)
 
-    model.train_codebook(train_vectors=data, base_learning_rate=0.001, epochs=100)
+    model.train_codebook(train_vectors=dataset, base_learning_rate=0.001, epochs=100)
 
     print("Trained codebook:")
     pprint(model.codebook)
 
-    print("Sample:", data[0])
-    print("Prediction:", model.predict(data[0]))
+    print("Sample:", dataset[0])
+    print("Prediction:", model.predict(dataset[0]))
 
     scores = lvq.cross_validate(
-        data,
+        dataset,
         5,
         codebook_size=codebook,
         features_count=features,
