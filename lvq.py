@@ -1,5 +1,6 @@
 from random import seed, shuffle, uniform
 from typing import List, Union
+from tqdm import tqdm
 
 
 class LVQ:
@@ -102,7 +103,13 @@ class LVQ:
     def train_codebook(
         self, train_vectors: List[List[float]], base_learning_rate: float, epochs: int
     ) -> None:
-        for epoch in range(epochs):
+        progress = tqdm(
+            range(epochs),
+            unit="epochs",
+            ncols=100,
+            bar_format="Training: {percentage:3.0f}% |{bar}| {n_fmt}/{total_fmt}{postfix}",
+        )
+        for epoch in progress:
             sse = 0.0
             learning_rate = self.linear_decay(base_learning_rate, epoch, epochs)
             for t_vector in train_vectors:
@@ -116,7 +123,7 @@ class LVQ:
                         b_vector[idx] += learning_rate * error
                     else:
                         b_vector[idx] -= learning_rate * error
-            print(f"> epoch {epoch:>5}, error {round(sse,3):>5}")
+            progress.set_postfix(sse=sse)
 
     @staticmethod
     def linear_decay(base_rate: float, current_epoch: int, total_epochs: int) -> float:
