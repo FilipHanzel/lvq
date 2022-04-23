@@ -21,7 +21,7 @@ if __name__ == "__main__":
     print("New codebook:")
     pprint(model.codebook)
 
-    model.train_codebook(train_vectors=data, learning_rate=0.001, epochs=100)
+    model.train_codebook(train_vectors=data, base_learning_rate=0.001, epochs=100)
 
     print("Trained codebook:")
     pprint(model.codebook)

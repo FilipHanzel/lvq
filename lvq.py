@@ -35,10 +35,11 @@ class LVQ:
         return self.get_best_matching_vector(input_features + [None])[-1]
 
     def train_codebook(
-        self, train_vectors: List[List[float]], learning_rate: float, epochs: int
+        self, train_vectors: List[List[float]], base_learning_rate: float, epochs: int
     ) -> None:
         for epoch in range(epochs):
             sse = 0.0
+            learning_rate = self.linear_decay(base_learning_rate, epoch, epochs)
             for t_vector in train_vectors:
                 b_vector = self.get_best_matching_vector(t_vector)
 
@@ -51,6 +52,10 @@ class LVQ:
                     else:
                         b_vector[idx] -= learning_rate * error
             print(f"> epoch {epoch:>5}, error {round(sse,3):>5}")
+
+    @staticmethod
+    def linear_decay(base_rate: float, current_epoch: int, total_epochs: int) -> float:
+        return base_rate * (1.0 - (current_epoch / total_epochs))
 
 
 def cross_validate(
