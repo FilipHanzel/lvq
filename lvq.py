@@ -1,18 +1,83 @@
-from random import seed, shuffle
+from random import seed, shuffle, uniform
 from typing import List, Union
 
 
 class LVQ:
-    def __init__(self, codebook_size: int, features_count: int, labels_count: int):
-        """LVQ algorithm implementation.
+    """LVQ algorithm implementation.
 
-        Allows to create, train and use a codebook. Codebook is a list of vectors.
-        Vector is a list of weights/features and a label.
-        """
+    Allows to create, train and use a codebook. Codebook is a list of vectors.
+    Vector is a list of weights/features and a label.
+    """
 
+    def __init__(
+        self,
+        codebook_size: int,
+        features_count: int,
+        labels_count: int,
+        codebook_init_method: str = "zeros",
+        codebook_init_dataset: List[float] = None,
+    ):
+
+        self.codebook_size = codebook_size
         self.features_count = features_count
+        self.labels_count = labels_count
+
+        assert codebook_init_method in (
+            "zeros",
+            "sample",
+            "random",
+        ), "Currently supported codebook initialization methods are: zeros, sample, random"
+        if codebook_init_method == "sample":
+            assert (
+                codebook_init_dataset is not None
+            ), "Dataset is needed for sample codebook initialization"
+            assert (
+                len(codebook_init_dataset) >= codebook_size
+            ), "Not enough samples in the dataset"
+
+        if codebook_init_method == "zeros":
+            self._init_codebook_zeros()
+        elif codebook_init_method == "sample":
+            self._init_codebook_sample(codebook_init_dataset)
+        elif codebook_init_method == "random":
+            self._init_codebook_random()
+
+    def _init_codebook_zeros(self) -> None:
+        """Initialize codebook with zeros for all the features.
+
+        Tries to take the same amout of samples for each label.
+        """
         self.codebook = [
-            [0] * features_count + [i % labels_count + 1] for i in range(codebook_size)
+            [0] * self.features_count + [i % self.labels_count + 1]
+            for i in range(self.codebook_size)
+        ]
+
+    def _init_codebook_sample(self, dataset: List[List[float]]) -> None:
+        """Initialize codebook based on sample dataset.
+
+        Takes some samples from the dataset to initialize the codebook.
+        Tries to take the same amout of samples for each label.
+        """
+        label_split = {label + 1: [] for label in range(self.labels_count)}
+        for vector in dataset:
+            label_split[vector[-1]].append(vector)
+
+        self.codebook = []
+        idx = 1
+        while len(self.codebook) < self.codebook_size:
+            if len(label_split[idx]) > 0:
+                self.codebook.append(label_split[idx].pop())
+            idx = (idx + 1) % self.labels_count + 1
+
+    def _init_codebook_random(self) -> None:
+        """Initialize the codebook with random values bewteen 0 and 1.
+
+        Tries to take the same amout of samples for each label.
+        """
+        self.codebook = [
+            [uniform(0, 1) for _ in range(self.features_count)]
+            + [i % self.labels_count + 1]
+            for i in range(self.codebook_size)
         ]
 
     @staticmethod
@@ -35,10 +100,11 @@ class LVQ:
         return self.get_best_matching_vector(input_features + [None])[-1]
 
     def train_codebook(
-        self, train_vectors: List[List[float]], learning_rate: float, epochs: int
+        self, train_vectors: List[List[float]], base_learning_rate: float, epochs: int
     ) -> None:
         for epoch in range(epochs):
             sse = 0.0
+            learning_rate = self.linear_decay(base_learning_rate, epoch, epochs)
             for t_vector in train_vectors:
                 b_vector = self.get_best_matching_vector(t_vector)
 
@@ -52,16 +118,23 @@ class LVQ:
                         b_vector[idx] -= learning_rate * error
             print(f"> epoch {epoch:>5}, error {round(sse,3):>5}")
 
+    @staticmethod
+    def linear_decay(base_rate: float, current_epoch: int, total_epochs: int) -> float:
+        return base_rate * (1.0 - (current_epoch / total_epochs))
+
 
 def cross_validate(
+    # Validation params
     dataset: List[List[float]],
     fold_count: int,
-    *,
+    learning_rate: float,
+    epochs: int,
+    # Codebook params
     codebook_size: int,
     features_count: int,
     labels_count: int,
-    learning_rate: float,
-    epochs: int,
+    codebook_init_method: str = "zeros",
+    codebook_init_dataset: List[float] = None,
 ) -> List[float]:
 
     dataset_copy = dataset.copy()
@@ -80,7 +153,13 @@ def cross_validate(
         train_vectors.remove(test_vectors)
         train_vectors = [item for fold in train_vectors for item in fold]
 
-        model = LVQ(codebook_size, features_count, labels_count)
+        model = LVQ(
+            codebook_size=codebook_size,
+            features_count=features_count,
+            labels_count=labels_count,
+            codebook_init_method=codebook_init_method,
+            codebook_init_dataset=codebook_init_dataset,
+        )
         model.train_codebook(train_vectors, learning_rate, epochs)
 
         correct = 0
