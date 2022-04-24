@@ -52,6 +52,14 @@ if __name__ == "__main__":
         dest="learning_rate",
     )
     parser.add_argument(
+        "--learning-rate-decay",
+        "-lrd",
+        action="store",
+        type=str,
+        default=None,
+        dest="learning_rate_decay",
+    )
+    parser.add_argument(
         "--epochs", "-e", action="store", type=int, default=100, dest="epochs"
     )
     parser.add_argument(
@@ -103,7 +111,10 @@ if __name__ == "__main__":
 
     print("Training model...")
     model.train_codebook(
-        train_vectors=dataset, base_learning_rate=args.learning_rate, epochs=args.epochs
+        train_vectors=dataset,
+        base_learning_rate=args.learning_rate,
+        learning_rate_decay=args.learning_rate_decay,
+        epochs=args.epochs,
     )
 
     print("Prediction:", model.predict(features))
@@ -117,6 +128,7 @@ if __name__ == "__main__":
         args.cross_validation_folds,
         **model_config,
         learning_rate=args.learning_rate,
+        learning_rate_decay=args.learning_rate_decay,
         epochs=args.epochs,
     )
     print("Cross validation scores:", [round(score, 3) for score in scores])
