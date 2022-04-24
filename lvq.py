@@ -101,17 +101,29 @@ class LVQ:
         return self.get_best_matching_vector(input_features + [None])[-1]
 
     def train_codebook(
-        self, train_vectors: List[List[float]], base_learning_rate: float, epochs: int
+        self,
+        train_vectors: List[List[float]],
+        epochs: int,
+        base_learning_rate: float,
+        learning_rate_decay: Union[str, None] = "linear",
     ) -> None:
+        assert learning_rate_decay in [
+            None,
+            "linear",
+        ], "Unsupported learning rate decay"
+
         progress = tqdm(
             range(epochs),
             unit="epochs",
             ncols=100,
             bar_format="Training: {percentage:3.0f}% |{bar}| {n_fmt}/{total_fmt}{postfix}",
         )
+
+        learning_rate = base_learning_rate
         for epoch in progress:
             sse = 0.0
-            learning_rate = self.linear_decay(base_learning_rate, epoch, epochs)
+            if learning_rate_decay == "linear":
+                learning_rate = self.linear_decay(base_learning_rate, epoch, epochs)
             for t_vector in train_vectors:
                 b_vector = self.get_best_matching_vector(t_vector)
 
@@ -135,6 +147,7 @@ def cross_validate(
     dataset: List[List[float]],
     fold_count: int,
     learning_rate: float,
+    learning_rate_decay: Union[str, None],
     epochs: int,
     # Codebook params
     codebook_size: int,
@@ -166,7 +179,12 @@ def cross_validate(
             codebook_init_method=codebook_init_method,
             codebook_init_dataset=codebook_init_dataset,
         )
-        model.train_codebook(train_vectors, learning_rate, epochs)
+        model.train_codebook(
+            train_vectors=train_vectors,
+            base_learning_rate=learning_rate,
+            learning_rate_decay=learning_rate_decay,
+            epochs=epochs,
+        )
 
         correct = 0
         for vector in test_vectors:
