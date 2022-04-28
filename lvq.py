@@ -1,5 +1,5 @@
 from random import seed, shuffle, uniform
-from typing import List, Union
+from typing import List, Union, Tuple
 from tqdm import tqdm
 
 
@@ -100,6 +100,19 @@ class LVQ:
     def predict(self, input_features: List[float]) -> int:
         return self.get_best_matching_vector(input_features + [None])[-1]
 
+    def update(self, train_vector: List[float], learning_rate: float) -> Tuple[float, float]:
+        best_vector = self.get_best_matching_vector(train_vector)
+
+        for idx in range(self.features_count):
+            error = train_vector[idx] - best_vector[idx]
+
+            if train_vector[-1] == best_vector[-1]:
+                best_vector[idx] += learning_rate * error
+            else:
+                best_vector[idx] -= learning_rate * error
+
+        return (best_vector[-1], error**2)
+
     def train_codebook(
         self,
         train_vectors: List[List[float]],
@@ -125,21 +138,12 @@ class LVQ:
             accuracy = 0
             if learning_rate_decay == "linear":
                 learning_rate = self.linear_decay(base_learning_rate, epoch, epochs)
-            for t_vector in train_vectors:
-                b_vector = self.get_best_matching_vector(t_vector)
+            for train_vector in train_vectors:
+                prediction, square_error = self.update(train_vector, learning_rate)
 
-                correct = t_vector[-1] == b_vector[-1]
-                if correct:
+                if prediction == train_vector[-1]:
                     accuracy += 1
-
-                for idx in range(self.features_count):
-                    error = t_vector[idx] - b_vector[idx]
-                    sse += error**2
-
-                    if correct:
-                        b_vector[idx] += learning_rate * error
-                    else:
-                        b_vector[idx] -= learning_rate * error
+                sse += square_error
 
             accuracy /= len(train_vectors)
             progress.set_postfix(sse=sse, acc=round(accuracy, 3))
