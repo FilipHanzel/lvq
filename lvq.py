@@ -49,7 +49,7 @@ class LVQ:
         Tries to take the same amout of samples for each label.
         """
         self.codebook = [
-            [0] * self.features_count + [i % self.labels_count + 1]
+            [0] * self.features_count + [i % self.labels_count]
             for i in range(self.codebook_size)
         ]
 
@@ -59,16 +59,16 @@ class LVQ:
         Takes some samples from the dataset to initialize the codebook.
         Tries to take the same amout of samples for each label.
         """
-        label_split = {label + 1: [] for label in range(self.labels_count)}
+        label_split = {label: [] for label in range(self.labels_count)}
         for vector in dataset:
             label_split[vector[-1]].append(vector)
 
         self.codebook = []
-        idx = 1
+        idx = 0
         while len(self.codebook) < self.codebook_size:
             if len(label_split[idx]) > 0:
                 self.codebook.append(label_split[idx].pop().copy())
-            idx = idx % self.labels_count + 1
+            idx = (idx + 1) % self.labels_count
 
     def _init_codebook_random(self) -> None:
         """Initialize the codebook with random values bewteen 0 and 1.
@@ -77,7 +77,7 @@ class LVQ:
         """
         self.codebook = [
             [uniform(0, 1) for _ in range(self.features_count)]
-            + [i % self.labels_count + 1]
+            + [i % self.labels_count]
             for i in range(self.codebook_size)
         ]
 
