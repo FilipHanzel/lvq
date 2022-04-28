@@ -100,7 +100,9 @@ class LVQ:
     def predict(self, input_features: List[float]) -> int:
         return self.get_best_matching_vector(input_features + [None])[-1]
 
-    def update(self, train_vector: List[float], learning_rate: float) -> Tuple[float, float]:
+    def update(
+        self, train_vector: List[float], learning_rate: float
+    ) -> Tuple[float, float]:
         best_vector = self.get_best_matching_vector(train_vector)
 
         for idx in range(self.features_count):
