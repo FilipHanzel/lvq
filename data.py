@@ -30,9 +30,7 @@ def load_ionosphere_data():
 def encode_labels(dataset: List[List[Any]]) -> (Dict[Any, int], List[List[Any]]):
     """Encode dataset labels. Return label: encoding mapping and mapped dataset."""
 
-    mapping = {
-        label: idx + 1 for idx, label in enumerate({label for *_, label in dataset})
-    }
+    mapping = {label: idx for idx, label in enumerate({label for *_, label in dataset})}
     mapped_dataset = [[*features, mapping[label]] for *features, label in dataset]
 
     return mapping, mapped_dataset

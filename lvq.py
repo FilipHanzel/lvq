@@ -1,5 +1,5 @@
 from random import seed, shuffle, uniform
-from typing import List, Union
+from typing import List, Union, Tuple
 from tqdm import tqdm
 
 
@@ -49,7 +49,7 @@ class LVQ:
         Tries to take the same amout of samples for each label.
         """
         self.codebook = [
-            [0] * self.features_count + [i % self.labels_count + 1]
+            [0] * self.features_count + [i % self.labels_count]
             for i in range(self.codebook_size)
         ]
 
@@ -59,16 +59,16 @@ class LVQ:
         Takes some samples from the dataset to initialize the codebook.
         Tries to take the same amout of samples for each label.
         """
-        label_split = {label + 1: [] for label in range(self.labels_count)}
+        label_split = {label: [] for label in range(self.labels_count)}
         for vector in dataset:
             label_split[vector[-1]].append(vector)
 
         self.codebook = []
-        idx = 1
+        idx = 0
         while len(self.codebook) < self.codebook_size:
             if len(label_split[idx]) > 0:
                 self.codebook.append(label_split[idx].pop().copy())
-            idx = idx % self.labels_count + 1
+            idx = (idx + 1) % self.labels_count
 
     def _init_codebook_random(self) -> None:
         """Initialize the codebook with random values bewteen 0 and 1.
@@ -77,7 +77,7 @@ class LVQ:
         """
         self.codebook = [
             [uniform(0, 1) for _ in range(self.features_count)]
-            + [i % self.labels_count + 1]
+            + [i % self.labels_count]
             for i in range(self.codebook_size)
         ]
 
@@ -99,6 +99,21 @@ class LVQ:
 
     def predict(self, input_features: List[float]) -> int:
         return self.get_best_matching_vector(input_features + [None])[-1]
+
+    def update(
+        self, train_vector: List[float], learning_rate: float
+    ) -> Tuple[float, float]:
+        best_vector = self.get_best_matching_vector(train_vector)
+
+        for idx in range(self.features_count):
+            error = train_vector[idx] - best_vector[idx]
+
+            if train_vector[-1] == best_vector[-1]:
+                best_vector[idx] += learning_rate * error
+            else:
+                best_vector[idx] -= learning_rate * error
+
+        return (best_vector[-1], error**2)
 
     def train_codebook(
         self,
@@ -122,20 +137,18 @@ class LVQ:
         learning_rate = base_learning_rate
         for epoch in progress:
             sse = 0.0
+            accuracy = 0
             if learning_rate_decay == "linear":
                 learning_rate = self.linear_decay(base_learning_rate, epoch, epochs)
-            for t_vector in train_vectors:
-                b_vector = self.get_best_matching_vector(t_vector)
+            for train_vector in train_vectors:
+                prediction, square_error = self.update(train_vector, learning_rate)
 
-                for idx in range(self.features_count):
-                    error = t_vector[idx] - b_vector[idx]
-                    sse += error**2
+                if prediction == train_vector[-1]:
+                    accuracy += 1
+                sse += square_error
 
-                    if t_vector[-1] == b_vector[-1]:
-                        b_vector[idx] += learning_rate * error
-                    else:
-                        b_vector[idx] -= learning_rate * error
-            progress.set_postfix(sse=sse)
+            accuracy /= len(train_vectors)
+            progress.set_postfix(sse=sse, acc=round(accuracy, 3))
 
     @staticmethod
     def linear_decay(base_rate: float, current_epoch: int, total_epochs: int) -> float:
