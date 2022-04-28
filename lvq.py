@@ -122,20 +122,27 @@ class LVQ:
         learning_rate = base_learning_rate
         for epoch in progress:
             sse = 0.0
+            accuracy = 0
             if learning_rate_decay == "linear":
                 learning_rate = self.linear_decay(base_learning_rate, epoch, epochs)
             for t_vector in train_vectors:
                 b_vector = self.get_best_matching_vector(t_vector)
 
+                correct = t_vector[-1] == b_vector[-1]
+                if correct:
+                    accuracy += 1
+
                 for idx in range(self.features_count):
                     error = t_vector[idx] - b_vector[idx]
                     sse += error**2
 
-                    if t_vector[-1] == b_vector[-1]:
+                    if correct:
                         b_vector[idx] += learning_rate * error
                     else:
                         b_vector[idx] -= learning_rate * error
-            progress.set_postfix(sse=sse)
+
+            accuracy /= len(train_vectors)
+            progress.set_postfix(sse=sse, acc=round(accuracy, 3))
 
     @staticmethod
     def linear_decay(base_rate: float, current_epoch: int, total_epochs: int) -> float:
