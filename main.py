@@ -1,9 +1,7 @@
 import random
-from pprint import pprint
 import argparse
 
 import lvq
-from data import normalize, encode_labels
 from data import load_ionosphere_data, load_iris_data
 
 
