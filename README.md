@@ -13,8 +13,8 @@ If LVQ will be initialized with *dataset sample* method and codebook size equal 
 
 ### Datasets
 Two datasets are included:
-- *iris* - https://archive.ics.uci.edu/ml/datasets/iris
-- *ionosphere* - https://archive.ics.uci.edu/ml/datasets/ionosphere
+- [*iris*](https://archive.ics.uci.edu/ml/datasets/iris)
+- [*ionosphere*](https://archive.ics.uci.edu/ml/datasets/ionosphere)
 
 ### To be implemented:
 - learning rate decay customization
