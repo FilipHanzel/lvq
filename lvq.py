@@ -14,8 +14,10 @@ class LVQ:
         self,
         codebook_size: int,
         features_count: int,
-        labels_count: int,
+        # labels_count is ignored if codebook_init_method == "sample"
+        labels_count: int = None,
         codebook_init_method: str = "zeros",
+        # codebook_init_dataset is ignored if codebook_init_method != "sample"
         codebook_init_dataset: List[float] = None,
     ):
 
@@ -37,10 +39,19 @@ class LVQ:
             ), "Not enough samples in the dataset"
 
         if codebook_init_method == "zeros":
+            if labels_count is None:
+                raise ValueError("missing labels_count")
             self._init_codebook_zeros()
+
         elif codebook_init_method == "sample":
+            if codebook_init_dataset is None:
+                # No dataset - no samples to use for initialization
+                raise Exception("sample initialization requires dataset")
             self._init_codebook_sample(codebook_init_dataset)
+
         elif codebook_init_method == "random":
+            if labels_count is None:
+                raise ValueError("missing labels_count")
             self._init_codebook_random()
 
     def _init_codebook_zeros(self) -> None:
@@ -159,7 +170,7 @@ def cross_validate(
     # Validation params
     dataset: List[List[float]],
     fold_count: int,
-    learning_rate: float,
+    base_learning_rate: float,
     learning_rate_decay: Union[str, None],
     epochs: int,
     # Codebook params
@@ -194,7 +205,7 @@ def cross_validate(
         )
         model.train_codebook(
             train_vectors=train_vectors,
-            base_learning_rate=learning_rate,
+            base_learning_rate=base_learning_rate,
             learning_rate_decay=learning_rate_decay,
             epochs=epochs,
         )
