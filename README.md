@@ -11,10 +11,6 @@ Three different initialization methods are supported:
 
 If LVQ will be initialized with *dataset sample* method and codebook size equal to size of the dataset, we will get KNN, where k=1.
 
-### Datasets
-Two datasets are included:
-- [*iris*](https://archive.ics.uci.edu/ml/datasets/iris)
-- [*ionosphere*](https://archive.ics.uci.edu/ml/datasets/ionosphere)
-
-### To be implemented:
-- learning rate decay customization
+### Examples
+- [*iris* (multiclass classification)](https://archive.ics.uci.edu/ml/datasets/iris) - attempt at solving iris multiclass classification problem
+- [*ionosphere* (binary classification)](https://archive.ics.uci.edu/ml/datasets/ionosphere) - attempt at solving ionosphere binary classification problem
