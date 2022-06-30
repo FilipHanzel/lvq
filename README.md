@@ -18,5 +18,3 @@ Two datasets are included:
 
 ### To be implemented:
 - learning rate decay customization
-- improvements of in code documentation
-- unit tests
